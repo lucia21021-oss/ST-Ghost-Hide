@@ -1,8 +1,8 @@
 {
   "display_name": "True Hide (纯净版)",
-  "name": "True Hide",
-  "version": "1.0.0",
+  "name": "true-hide",
+  "version": "1.1.0",
   "author": "YourName",
   "js": "index.js",
-  "description": "极简版：让隐藏楼层彻底从前端消失。无多余UI，适配手机端。"
+  "description": "极简版：让隐藏楼层彻底从前端消失。在顶部栏提供了一个小眼睛开关，方便你随时临时查看并恢复隐藏的楼层。"
 }
