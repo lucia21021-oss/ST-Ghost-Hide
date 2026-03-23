@@ -1,21 +1,14 @@
-import { extension_settings } from "../../../extensions.js";
-import { saveSettingsDebounced } from "../../../../script.js";
+import { getContext } from "../../../../extensions.js";
 
 const extensionName = "st-true-hide";
 const defaultSettings = { mode: 'hover' };
-
-// 初始化设置
-if (!extension_settings[extensionName]) {
-    extension_settings[extensionName] = defaultSettings;
-}
 
 // 动态注入样式表
 let styleElement = document.createElement("style");
 styleElement.id = "true-hide-css";
 document.head.appendChild(styleElement);
 
-function updateCSS() {
-    const mode = extension_settings[extensionName].mode;
+function updateCSS(mode) {
     if (mode === "invisible") {
         styleElement.innerHTML = `.mes.mes_hidden { display: none !important; }`;
     } else if (mode === "hover") {
@@ -38,15 +31,26 @@ function updateCSS() {
             }
         `;
     } else {
-        styleElement.innerHTML = ""; // 禁用扩展时的默认效果
+        styleElement.innerHTML = ""; // 禁用时的默认效果
     }
 }
 
 // 在酒馆加载完毕后生成前端 UI
 jQuery(async () => {
-    updateCSS();
+    // 获取酒馆全局上下文和设置
+    const context = getContext();
+    const extension_settings = context.extension_settings;
+    const saveSettingsDebounced = context.saveSettingsDebounced;
 
-    // 构建原生风格的折叠菜单UI
+    // 初始化设置
+    if (!extension_settings[extensionName]) {
+        extension_settings[extensionName] = defaultSettings;
+    }
+
+    // 初始化时立刻应用 CSS
+    updateCSS(extension_settings[extensionName].mode);
+
+    // 构建原生风格的折叠菜单 UI
     const container = $(`
         <div class="extension-settings" id="true_hide_settings">
             <div class="inline-drawer">
@@ -62,7 +66,9 @@ jQuery(async () => {
                         <option value="disabled">禁用扩展 (恢复酒馆默认效果)</option>
                     </select>
                     <small>
-                        <br><b>提示：</b> 使用 <code>/hide 5</code> 隐藏单楼层；使用 <code>/unhide 10-15</code> 批量恢复楼层。
+                        <br><b>操作提示：</b><br>
+                        隐藏：在聊天框输入 <code>/hide 5</code> (隐藏第5楼)<br>
+                        恢复：在聊天框输入 <code>/unhide 10-15</code> (批量恢复10到15楼)
                     </small>
                 </div>
             </div>
@@ -72,14 +78,15 @@ jQuery(async () => {
     // 将菜单添加到扩展面板
     $("#extensions_settings").append(container);
 
-    // 绑定设置变更事件
-    const selectEl = $("#true_hide_mode");
+    // 绑定下拉菜单的数据与事件
+    const selectEl = container.find("#true_hide_mode");
     selectEl.val(extension_settings[extensionName].mode);
 
     selectEl.on("change", function() {
-        extension_settings[extensionName].mode = $(this).val();
-        saveSettingsDebounced();
-        updateCSS(); // 切换模式时立即生效
+        const newMode = $(this).val();
+        extension_settings[extensionName].mode = newMode;
+        saveSettingsDebounced(); // 呼叫酒馆保存设置
+        updateCSS(newMode);      // 立即生效
     });
     
     // 绑定折叠菜单的开合动画
