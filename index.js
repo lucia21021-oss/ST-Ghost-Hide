@@ -1,20 +1,26 @@
-// 👻 Ghost Hide 核心逻辑
-// 彻底移除容易暴毙的 import 相对路径，改用全局变量直接接管
-
+// 👻 Ghost Hide 终极防暴毙版
 const extensionName = "st-true-hide";
 const defaultSettings = { mode: 'hover' };
 
-// 动态注入样式表
-let styleElement = document.createElement("style");
+// 1. 安全创建并注入 Style 标签
+const styleElement = document.createElement("style");
 styleElement.id = "true-hide-css";
 document.head.appendChild(styleElement);
 
 function updateCSS(mode) {
+    // 地毯式轰炸选择器：兼容目前酒馆所有可能用来标记“隐藏”的网页元素标签
+    const nuclearSelectors = `
+        #chat .mes.mes_hidden, 
+        #chat div.mes[is_hidden="true"], 
+        #chat div.mes[ch_hidden="true"], 
+        #chat div.mes[data-is_hidden="true"]
+    `;
+    
     if (mode === "invisible") {
-        styleElement.innerHTML = `.mes.mes_hidden { display: none !important; }`;
+        styleElement.textContent = `${nuclearSelectors} { display: none !important; }`;
     } else if (mode === "hover") {
-        styleElement.innerHTML = `
-            .mes.mes_hidden {
+        styleElement.textContent = `
+            ${nuclearSelectors} {
                 max-height: 4px !important;
                 min-height: 0px !important;
                 padding: 0px !important;
@@ -24,7 +30,7 @@ function updateCSS(mode) {
                 transition: all 0.3s ease !important;
                 border: none !important;
             }
-            .mes.mes_hidden:hover {
+            ${nuclearSelectors}:hover {
                 max-height: 5000px !important;
                 padding: 10px !important;
                 opacity: 0.8 !important;
@@ -32,73 +38,76 @@ function updateCSS(mode) {
             }
         `;
     } else {
-        styleElement.innerHTML = ""; // 禁用时的默认效果
+        styleElement.textContent = ""; 
     }
 }
 
-// 在酒馆前端加载完毕后生成 UI
-jQuery(async () => {
-    // 兼容获取酒馆的全局变量（彻底绕过路径引用错误 [object Event]）
-    const settingsObj = window.extension_settings || {};
-    const saveFn = window.saveSettingsDebounced || (() => {});
-
-    // 初始化设置
-    if (!settingsObj[extensionName]) {
-        settingsObj[extensionName] = defaultSettings;
+// 2. 使用轮询等待酒馆完全加载（100% 触发，防死机）
+const initInterval = setInterval(() => {
+    const extSettingsContainer = document.getElementById("extensions_settings");
+    if (extSettingsContainer) {
+        clearInterval(initInterval);
+        initExtension();
     }
+}, 500);
 
-    // 初始化时立刻应用 CSS
-    updateCSS(settingsObj[extensionName].mode);
+function initExtension() {
+    // 3. 读取或初始化设置
+    let settings = window.extension_settings ? window.extension_settings[extensionName] : null;
+    if (!settings) {
+        settings = defaultSettings;
+        if (window.extension_settings) {
+            window.extension_settings[extensionName] = settings;
+        }
+    }
+    
+    // 初始化应用 CSS
+    updateCSS(settings.mode);
 
-    // 构建原生风格的折叠菜单 UI
-    const container = $(`
-        <div class="extension-settings" id="true_hide_settings">
-            <div class="inline-drawer">
-                <div class="inline-drawer-toggle inline-drawer-header">
-                    <b>👻 Ghost Hide (彻底隐形)</b>
-                    <div class="inline-drawer-icon fa-solid fa-chevron-down down"></div>
-                </div>
-                <div class="inline-drawer-content" style="display:none; padding-top:10px;">
-                    <label for="true_hide_mode">选择隐身模式 / Hide Mode</label>
-                    <select id="true_hide_mode" class="text_pole">
-                        <option value="hover">悬浮显形 (推荐: 鼠标滑过接缝可显现)</option>
+    // 4. 构建原生 HTML5 折叠 UI (抛弃酒馆内置组件，绝对不会卡死)
+    const containerHtml = `
+        <div class="extension-settings" id="true_hide_settings" style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.1); border: 1px solid var(--SmartThemeBorderColor, #555); border-radius: 8px;">
+            <details>
+                <summary style="cursor: pointer; font-weight: bold; font-size: 1.1em; outline: none;">👻 Ghost Hide (彻底隐形) 🔽</summary>
+                <div style="padding-top:15px;">
+                    <label for="true_hide_mode" style="display:block; margin-bottom:5px;">选择隐身模式 / Hide Mode</label>
+                    <select id="true_hide_mode" class="text_pole" style="width: 100%; margin-bottom: 10px; padding: 5px;">
+                        <option value="hover">悬浮显形 (推荐: 鼠标滑过缝隙可显现)</option>
                         <option value="invisible">彻底消失 (最纯净: 仅靠命令恢复)</option>
                         <option value="disabled">禁用扩展 (恢复酒馆默认效果)</option>
                     </select>
-                    <small>
-                        <br><b>操作提示：</b><br>
-                        隐藏：输入 <code>/hide 5</code> (隐藏第5楼)<br>
-                        恢复：输入 <code>/unhide 10-15</code> (批量恢复10-15楼)
+                    <small style="color: #aaa;">
+                        <b>操作提示：</b><br>
+                        🔹 隐藏单层：输入 <code>/hide 5</code> <br>
+                        🔹 批量恢复：输入 <code>/unhide 10-15</code> <br>
+                        （注：如果在前端点击消息自带的“隐藏/小眼睛”按钮，也会瞬间隐身）
                     </small>
                 </div>
-            </div>
+            </details>
         </div>
-    `);
-
-    // 将菜单添加到扩展面板
-    $("#extensions_settings").append(container);
-
-    // 绑定下拉菜单的数据与事件
-    const selectEl = container.find("#true_hide_mode");
-    selectEl.val(settingsObj[extensionName].mode);
-
-    selectEl.on("change", function() {
-        const newMode = $(this).val();
-        settingsObj[extensionName].mode = newMode;
-        saveFn(); // 呼叫酒馆自动保存设置
-        updateCSS(newMode);      // 立即在前端生效
-    });
+    `;
     
-    // 绑定折叠菜单的开合动画
-    container.find('.inline-drawer-toggle').on('click', function() {
-        const content = $(this).next('.inline-drawer-content');
-        const icon = $(this).find('.inline-drawer-icon');
-        content.slideToggle();
-        icon.toggleClass('down up');
-        if(icon.hasClass('fa-chevron-down')) {
-            icon.removeClass('fa-chevron-down').addClass('fa-chevron-up');
-        } else {
-            icon.removeClass('fa-chevron-up').addClass('fa-chevron-down');
+    // 注入 UI
+    $("#extensions_settings").append(containerHtml);
+
+    // 5. 绑定下拉菜单事件
+    const selectEl = document.getElementById("true_hide_mode");
+    selectEl.value = settings.mode;
+
+    selectEl.addEventListener("change", (e) => {
+        const newMode = e.target.value;
+        settings.mode = newMode;
+        
+        // 保存到酒馆内存
+        if (window.extension_settings) {
+            window.extension_settings[extensionName] = settings;
         }
+        // 呼叫酒馆保存到文件
+        if (typeof window.saveSettingsDebounced === "function") {
+            window.saveSettingsDebounced();
+        }
+        
+        // 立刻应用新样式
+        updateCSS(newMode);
     });
-});
+}
