@@ -1,22 +1,18 @@
-jQuery(() => {
-    // 防止重复注入
-    if (document.getElementById("st-true-hide-pure-css")) return;
-
-    const style = document.createElement("style");
-    style.id = "st-true-hide-pure-css";
+(function() {
+    // 防止重复加载
+    if (document.getElementById("st-true-hide-style")) return;
     
-    // 终极精准打击：只认酒馆官方的隐藏属性，绝对不误伤任何正常楼层！
+    const style = document.createElement("style");
+    style.id = "st-true-hide-style";
+    
+    // 核心逻辑：只要带有 is_hidden="true" 属性，就在聊天界面彻底抹除
     style.textContent = `
         #chat .mes[is_hidden="true"],
-        #chat .mes[data-is_hidden="true"],
-        #chat .mes.mes_hidden {
+        #chat .mes[data-is_hidden="true"] {
             display: none !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            height: 0 !important;
-            overflow: hidden !important;
         }
     `;
     
     document.head.appendChild(style);
-});
+    console.log("True Hide 极简版已成功加载！"); // 用于测试是否加载成功
+})();
