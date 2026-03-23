@@ -1,4 +1,5 @@
-import { getContext } from "../../../../extensions.js";
+// 👻 Ghost Hide 核心逻辑
+// 彻底移除容易暴毙的 import 相对路径，改用全局变量直接接管
 
 const extensionName = "st-true-hide";
 const defaultSettings = { mode: 'hover' };
@@ -35,20 +36,19 @@ function updateCSS(mode) {
     }
 }
 
-// 在酒馆加载完毕后生成前端 UI
+// 在酒馆前端加载完毕后生成 UI
 jQuery(async () => {
-    // 获取酒馆全局上下文和设置
-    const context = getContext();
-    const extension_settings = context.extension_settings;
-    const saveSettingsDebounced = context.saveSettingsDebounced;
+    // 兼容获取酒馆的全局变量（彻底绕过路径引用错误 [object Event]）
+    const settingsObj = window.extension_settings || {};
+    const saveFn = window.saveSettingsDebounced || (() => {});
 
     // 初始化设置
-    if (!extension_settings[extensionName]) {
-        extension_settings[extensionName] = defaultSettings;
+    if (!settingsObj[extensionName]) {
+        settingsObj[extensionName] = defaultSettings;
     }
 
     // 初始化时立刻应用 CSS
-    updateCSS(extension_settings[extensionName].mode);
+    updateCSS(settingsObj[extensionName].mode);
 
     // 构建原生风格的折叠菜单 UI
     const container = $(`
@@ -67,8 +67,8 @@ jQuery(async () => {
                     </select>
                     <small>
                         <br><b>操作提示：</b><br>
-                        隐藏：在聊天框输入 <code>/hide 5</code> (隐藏第5楼)<br>
-                        恢复：在聊天框输入 <code>/unhide 10-15</code> (批量恢复10到15楼)
+                        隐藏：输入 <code>/hide 5</code> (隐藏第5楼)<br>
+                        恢复：输入 <code>/unhide 10-15</code> (批量恢复10-15楼)
                     </small>
                 </div>
             </div>
@@ -80,13 +80,13 @@ jQuery(async () => {
 
     // 绑定下拉菜单的数据与事件
     const selectEl = container.find("#true_hide_mode");
-    selectEl.val(extension_settings[extensionName].mode);
+    selectEl.val(settingsObj[extensionName].mode);
 
     selectEl.on("change", function() {
         const newMode = $(this).val();
-        extension_settings[extensionName].mode = newMode;
-        saveSettingsDebounced(); // 呼叫酒馆保存设置
-        updateCSS(newMode);      // 立即生效
+        settingsObj[extensionName].mode = newMode;
+        saveFn(); // 呼叫酒馆自动保存设置
+        updateCSS(newMode);      // 立即在前端生效
     });
     
     // 绑定折叠菜单的开合动画
