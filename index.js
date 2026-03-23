@@ -2,18 +2,14 @@ jQuery(() => {
     const style = document.createElement("style");
     style.id = "st-true-hide-pure-css";
     
-    // 追踪那个“小幽灵”并连同整个楼层一起强制抹除
+    // 精确制导：只有当小幽灵图标（.fa-ghost）出现在“文本正文区（.mes_text）”里时，才将整栋楼隐藏。
+    // 这样能完美避开隐藏在操作菜单里的按钮图标，100% 杜绝误伤正常楼层！
     style.textContent = `
-        /* 只要气泡/楼层内出现了小幽灵图标，彻底让它从前端消失 */
-        #chat .mes:has(.fa-ghost),
-        #chat .sysMessage:has(.fa-ghost),
-        #chat .mes_system:has(.fa-ghost),
-        #chat [is_hidden="true"] {
+        #chat .mes:has(.mes_text .fa-ghost) {
             display: none !important;
-            opacity: 0 !important;
-            height: 0 !important;
             margin: 0 !important;
             padding: 0 !important;
+            height: 0 !important;
             overflow: hidden !important;
         }
     `;
