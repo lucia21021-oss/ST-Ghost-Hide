@@ -1,17 +1,20 @@
-// 极简纯净版：无UI，无存储，无多余功能。
-// 仅仅在页面加载时注入一段 CSS，强制让被酒馆标记为“隐藏”的楼层彻底消失。
-
 jQuery(() => {
     const style = document.createElement("style");
     style.id = "st-true-hide-pure-css";
     
-    // 兼容目前酒馆所有可能用来标记“隐藏”的网页标签
+    // 追踪那个“小幽灵”并连同整个楼层一起强制抹除
     style.textContent = `
-        #chat .mes_hidden,
-        #chat .mes[is_hidden="true"],
-        #chat .mes[ch_hidden="true"],
-        #chat .mes[data-is_hidden="true"] {
+        /* 只要气泡/楼层内出现了小幽灵图标，彻底让它从前端消失 */
+        #chat .mes:has(.fa-ghost),
+        #chat .sysMessage:has(.fa-ghost),
+        #chat .mes_system:has(.fa-ghost),
+        #chat [is_hidden="true"] {
             display: none !important;
+            opacity: 0 !important;
+            height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
         }
     `;
     
