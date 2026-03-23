@@ -1,6 +1,8 @@
 {
-  "name": "Ghost Hide (彻底隐形)",
-  "description": "让酒馆中的隐藏楼层彻底从前端消失。提供“彻底隐形”和“防误触悬浮显形”两种模式，完美配合 /hide 与 /unhide 命令。",
+  "display_name": "👻 Ghost Hide (彻底隐形)",
+  "name": "Ghost Hide",
   "version": "1.0.0",
-  "author": "YourName"
+  "author": "YourName",
+  "js": "index.js",
+  "description": "让酒馆中的隐藏楼层彻底从前端消失。提供“彻底隐形”和“防误触悬浮显形”两种模式，完美配合 /hide 与 /unhide 命令。"
 }
