@@ -1,18 +1,25 @@
 (function() {
-    // 防止重复加载
-    if (document.getElementById("st-true-hide-style")) return;
+    // 1. 先清理可能卡住的旧代码
+    const oldStyle = document.getElementById("st-true-hide-style");
+    if (oldStyle) oldStyle.remove();
     
+    // 2. 注入纯净的隐藏样式
     const style = document.createElement("style");
     style.id = "st-true-hide-style";
     
-    // 核心逻辑：只要带有 is_hidden="true" 属性，就在聊天界面彻底抹除
+    // 3. 核心：只要酒馆底层判定它是隐藏的，直接让它从前端彻底蒸发
     style.textContent = `
-        #chat .mes[is_hidden="true"],
-        #chat .mes[data-is_hidden="true"] {
+        .mes.mes_hidden,
+        .mes[is_hidden="true"],
+        .mes[data-is_hidden="true"] {
             display: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            height: 0 !important;
+            border: none !important;
+            overflow: hidden !important;
         }
     `;
     
     document.head.appendChild(style);
-    console.log("True Hide 极简版已成功加载！"); // 用于测试是否加载成功
 })();
